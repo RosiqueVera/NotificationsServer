@@ -1,0 +1,19 @@
+# Archivo de variables de entorno
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Archivo de VS Code para test
+.vscode-test
+
+
+#Diccionarios de dependencias
+node_modules/
+jspm_packages/
+
+#Diccionario de llaves de servicio
+keys/
+
+
