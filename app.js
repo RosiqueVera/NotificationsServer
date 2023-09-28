@@ -1,105 +1,47 @@
+/**
+ * Oscar Alejandro Rosique Vera
+ * 27/09/2023
+ * 
+ * Servidor de maquetación de notificaciones en firebase con Aut0
+ */
+
+//Imports
 const appAdmin = require('firebase-admin/app');
-const messaging = require('firebase-admin/messaging');
 const express = require('express');
 
+const requestRoutes = require("./routes/notifications");
 
-const app = express();
 
-app.use(express.json())
+const corpo8 = require('./keys/corpo-8-firebase-adminsdk-3idy4-67e87f7f17.json');
 
 //Inicializamos la aplicación de firebase
-appAdmin.initializeApp({
-    credential: appAdmin.applicationDefault(),
+var defaultApp = appAdmin.initializeApp({
+    credential: appAdmin.cert(corpo8),
     projectId: 'corpo-8'
 });
+/* var otherApp = appAdmin.initializeApp(pushDemo,'PushDemo');
+
+console.log(otherApp.name); */
+
+//Declaración del uso de express (Para iniciar el servidor web)
+const app = express();
+
+//!Middlewares
+//Configuación del uso de json en express
+app.use(express.json());
+//esqueleto de la ruta
+app.use('/notificationServer/api/v1',requestRoutes);
+
+//default
+app.get("/", (_, res) => {
+    res.send("Bienvenido al servidor creado con NodeJS");
+  });
+app.get("/notificationServer/api/v1", (_, res) => {
+    res.send("REST Api dedicada al manejo de notificaciones con el uso de firebase y la nueva API de Cloud Messaging");
+  });
+//Configuración del puerto del servidor
 app.listen(3000,function(){
     console.log("Server stated on port 3000");
 });
 
-
-app.post("/send", function(req, res){
-    console.info(req.body);
-    //Esta variable obtiene de la petición el token al cual se le mandará la información
-    const receivedToken = req.body.token;
-    const information = req.body.information;
-    const badgecount = req.body.badgecount;
-    const message = {
-        token: receivedToken,
-        notification: {
-            title: "Prueba",
-            body: "Notificación desde servidor de pruebas"
-        },
-        data:information,
-        android:{
-            notification:{
-                notification_count: badgecount ?? 1,
-                sound : "default"
-            }
-        },
-        apns:{
-            payload:{
-                aps:{
-                    notification_count: badgecount ?? 1,
-                    sound : "default"
-                }
-            }
-        }
-    };
-    sendRequestToFCM(message, res);
-
-});
-
-app.post("/multi_send",function(req,res){
-    //Obtenemos los tokens de los dispositivos a los que se enviará
-    const tokens = req.body.tokens;
-    //Obtenemos la información del paylad
-    const information = req.body.information;
-    //Indicador de notificaciones pendientes
-    const badgecount = req.body.badgecount;
-
-    //maquetación de la estructura de la notificación
-    const message = {
-        registration_ids: tokens,
-        notification: {
-            title: "Prueba",
-            body: "Notificación desde servidor de pruebas"
-        },
-        data:information,
-        android:{
-            notification:{
-                notification_count: badgecount ?? 1,
-                sound : "default"
-            }
-        },
-        apns:{
-            payload:{
-                aps:{
-                    notification_count: badgecount ?? 1,
-                    sound : "default"
-                }
-            }
-        }
-    };
-
-    sendRequestToFCM(message, res);
-
-},);
-
-
-
-function sendRequestToFCM(message, res) {
-    messaging.getMessaging().send(message)
-        .then((response) => {
-            res.status(200).json({
-                message: "Successfully send message",
-                messageId: response,
-            });
-            console.log("Successfully sent message: ", response);
-        })
-        .catch((error) => {
-            res.status(400);
-            res.send(error);
-            console.log("Error sending message", error);
-        });
-}
 
