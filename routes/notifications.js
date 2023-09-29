@@ -5,7 +5,7 @@ const express = require("express");
 const router = express.Router();
 
 const corpo8 = require('../keys/corpo-8-firebase-adminsdk-3idy4-67e87f7f17.json');
-const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-adminsdk-3txzv-61dd017d09.json');
+const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-adminsdk-3txzv-2231a3d56d.json');
 /**
  * @swagger
  * components:
@@ -29,15 +29,42 @@ const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-admins
  *              token: eZRypq5KRh-IgoOOjjd8ow:APA91bEl_InBad4orc4WbjlqwacxEQUxAVsXvK7FP-LsDh0kRaIiw0ou5f6vTs6k-oWWJCJJpv0LhxljoLHzTrv6bJjJ9Rllvmj1I40zQe80K7kzx1d4hVAGi1w7k3ulK_TCLuWeUWSv
  *              information: { "dato1": "1", "dato2":"dos" }
  *              badgecount: 10
+ *      firebaseMultiple:
+ *          type: object
+ *          properties:
+ *              tokens:
+ *                  type: array
+ *                  description: Array que contiene los tokens de los dispositivos a los cuales tiene que llegar la notificación
+ *              information:
+ *                  type: string
+ *                  description: JSON de información que llevará el payload de la notificación
+ *              badgecount:
+ *                  type: integer
+ *                  descripction: Número de notificaciones pendientes
+ *          required:
+ *              -tokens
+ *              -badgecount
+ *          example:
+ *              tokens: ["fwgDdA7RTmuQY8aNVZHKA8:APA91bHD6x3XQM-fmp73fuSNIsNbvYc7bYsjVwyhjx1Px_ZQHDWULx5FntapuZlpzvjxn4-YSIdRELS9Auj0pJ-HYwftZWa3AhsMAaIljLXHPXJywhhKw1MzBdF_T8QUfeMHoXd0VJxt","eZRypq5KRh-IgoOOjjd8ow:APA91bEl_InBad4orc4WbjlqwacxEQUxAVsXvK7FP-LsDh0kRaIiw0ou5f6vTs6k-oWWJCJJpv0LhxljoLHzTrv6bJjJ9Rllvmj1I40zQe80K7kzx1d4hVAGi1w7k3ulK_TCLuWeUWSv"]
+ *              information: { "dato1": "1", "dato2":"dos" }
+ *              badgecount: 10
  */
 
 
 //Inicializamos la aplicación de firebase
-var defaultApp = appAdmin.initializeApp({
+var defaultApp = appAdmin.initializeApp(
+    {
     credential: appAdmin.cert(corpo8),
-    projectId: 'corpo-8'
-});
-var otherApp = appAdmin.initializeApp(appAdmin.cert(pushDemo),'PushDemo');
+    }
+);
+var otherApp = appAdmin.initializeApp(
+    {
+        credential: appAdmin.cert(pushDemo)
+    },
+    'PushDemo'
+);
+
+
 
 /**
  * @swagger
@@ -72,31 +99,7 @@ var otherApp = appAdmin.initializeApp(appAdmin.cert(pushDemo),'PushDemo');
 router.post("/onlyDevice", function(req, res){
     //console.info(req.body);
     //Esta variable obtiene de la petición el token al cual se le mandará la información
-    const receivedToken = req.body.token;
-    const information = req.body.information;
-    const badgecount = req.body.badgecount;
-    const message = {
-        token: receivedToken,
-        notification: {
-            title: "Prueba",
-            body: "Notificación desde servidor de pruebas"
-        },
-        data:information,
-        android:{
-            notification:{
-                notification_count: badgecount ?? 1,
-                sound : "default"
-            }
-        },
-        apns:{
-            payload:{
-                aps:{
-                    notification_count: badgecount ?? 1,
-                    sound : "default"
-                }
-            }
-        }
-    };
+    const message = buildNotificationMessage(req);
     sendRequestToFCM(message, res);
 
 });
@@ -112,7 +115,10 @@ router.post("/project/:project", function(req, res){
     var application = defaultApp.name;
     if (project ==='pushDemo') {
         application = otherApp.name;
+       
     }
+
+    
     const message = {
         token: receivedToken,
         notification: {
@@ -161,7 +167,7 @@ router.post("/project/:project", function(req, res){
  *              application/json:
  *                  schema:
  *                      type: object
- *                      $ref: '#/components/schemas/firebase'
+ *                      $ref: '#/components/schemas/firebaseMultiple'
  *      responses:
  *          200:
  *              description: La notificación se envió correctamente
@@ -238,6 +244,37 @@ router.post("/multi_devices",function(req,res){
 
 },);
 
+
+function buildNotificationMessage(req) {
+    const receivedToken = req.body.token;
+    const information = req.body.information;
+    const title = req.body.title ?? 'Notificación.';
+    const body = req.body.body ?? 'Notificación desde el servidor de notificaciones en NodeJS.';
+    const badgecount = req.body.badgecount;
+    const message = {
+        token: receivedToken,
+        notification: {
+            title: title,
+            body: body
+        },
+        data: information,
+        android: {
+            notification: {
+                notification_count: badgecount ?? 1,
+                sound: "default"
+            }
+        },
+        apns: {
+            payload: {
+                aps: {
+                    notification_count: badgecount ?? 1,
+                    sound: "default"
+                }
+            }
+        }
+    };
+    return message;
+}
 
 /**
  * @swagger

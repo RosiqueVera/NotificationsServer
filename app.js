@@ -22,7 +22,12 @@ const swaggerSpec = {
         },
         servers: [
             {
-                url: "http://localhost:3000"
+                url: "http://localhost:3000",
+                description: "Cuando se está ejecutando localmente"
+            },
+            {
+                url: "http://10.101.119.61:3000",
+                description: "conexión remota al servidor"
             }
         ],
 
@@ -46,7 +51,7 @@ app.use(
     swaggerUI.setup(swaggerJsDoc(swaggerSpec))
 );
 
-//default
+//Request default
 app.get("/", (_, res) => {
     res.send("Bienvenido al servidor creado con NodeJS");
 });
