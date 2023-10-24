@@ -8,6 +8,7 @@
 //Imports referentes a express
 const express = require('express');
 const requestRoutes = require("./routes/notifications");
+const singleRequest = require('./routes/singleRequest');
 const path = require("path");
 
 //Swagger
@@ -44,6 +45,7 @@ const app = express();
 app.use(express.json());
 //esqueleto de la ruta
 app.use('/notificationServer/api/v1/firebase', requestRoutes);
+app.use('/notificationServer/api/v1/firebase/single/', singleRequest);
 //para visualización de la documentación
 app.use(
     '/api-doc', 

@@ -16,6 +16,12 @@ const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-admins
  *              token:
  *                  type: string
  *                  description: token del dispositivo
+ *              title:
+ *                  type: string
+ *                  description: Titulo de la notificación
+ *              body:
+ *                  type:
+ *                  description: Es el cuerpo de la notificación
  *              information:
  *                  type: string
  *                  description: JSON de información que llevará el payload de la notificación
@@ -23,10 +29,12 @@ const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-admins
  *                  type: integer
  *                  descripction: Número de notificaciones pendientes
  *          required:
- *              -token
- *              -badgecount
+ *              - token
+ *              - badgecount
  *          example:
  *              token: eZRypq5KRh-IgoOOjjd8ow:APA91bEl_InBad4orc4WbjlqwacxEQUxAVsXvK7FP-LsDh0kRaIiw0ou5f6vTs6k-oWWJCJJpv0LhxljoLHzTrv6bJjJ9Rllvmj1I40zQe80K7kzx1d4hVAGi1w7k3ulK_TCLuWeUWSv
+ *              title: Prueba
+ *              message: Esta es una notificación de prueba desde el servidor de notificaciones en NodeJS 
  *              information: { "dato1": "1", "dato2":"dos" }
  *              badgecount: 10
  *      firebaseMultiple:
@@ -35,6 +43,12 @@ const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-admins
  *              tokens:
  *                  type: array
  *                  description: Array que contiene los tokens de los dispositivos a los cuales tiene que llegar la notificación
+ *              title:
+ *                  type: string
+ *                  description: Titulo de la notificación
+ *              body:
+ *                  type:
+ *                  description: Es el cuerpo de la notificación
  *              information:
  *                  type: string
  *                  description: JSON de información que llevará el payload de la notificación
@@ -42,10 +56,12 @@ const pushDemo = require('../keys/flutterpushnotifications-bfb3e-firebase-admins
  *                  type: integer
  *                  descripction: Número de notificaciones pendientes
  *          required:
- *              -tokens
- *              -badgecount
+ *              - tokens
+ *              - badgecount
  *          example:
  *              tokens: ["fwgDdA7RTmuQY8aNVZHKA8:APA91bHD6x3XQM-fmp73fuSNIsNbvYc7bYsjVwyhjx1Px_ZQHDWULx5FntapuZlpzvjxn4-YSIdRELS9Auj0pJ-HYwftZWa3AhsMAaIljLXHPXJywhhKw1MzBdF_T8QUfeMHoXd0VJxt","eZRypq5KRh-IgoOOjjd8ow:APA91bEl_InBad4orc4WbjlqwacxEQUxAVsXvK7FP-LsDh0kRaIiw0ou5f6vTs6k-oWWJCJJpv0LhxljoLHzTrv6bJjJ9Rllvmj1I40zQe80K7kzx1d4hVAGi1w7k3ulK_TCLuWeUWSv"]
+ *              title: Prueba
+ *              message: Esta es una notificación de prueba desde el servidor de notificaciones en NodeJS
  *              information: { "dato1": "1", "dato2":"dos" }
  *              badgecount: 10
  */
@@ -66,43 +82,7 @@ var otherApp = appAdmin.initializeApp(
 
 
 
-/**
- * @swagger
- * /notificationServer/api/v1/firebase/onlyDevice:
- *  post:
- *      summary: envia la notificación a un único dispositivo en la aplicación default a través del token 
- *      requestBody:
- *          required: true
- *          content:
- *              application/json:
- *                  schema:
- *                      type: object
- *                      $ref: '#/components/schemas/firebase'
- *      responses:
- *          200:
- *              description: La notificación se envió correctamente
- *              content:
- *                  applicattion/json:
- *                      schema:
- *                          type: object
- *                          $ref: '#/components/schemas/successfull'
- *          400:
- *              description: No se envió la notificación
- *              content:
- *                  applicattion/json:
- *                      schema:
- *                          type: object
- *                          $ref: '#/components/schemas/failure'
- *          500:
- *              description: Ocurrió un error en el servidor
- */
-router.post("/onlyDevice", function(req, res){
-    //console.info(req.body);
-    //Esta variable obtiene de la petición el token al cual se le mandará la información
-    const message = buildNotificationMessage(req);
-    sendRequestToFCM(message, res);
 
-});
 
 router.post("/project/:project", function(req, res){
     
@@ -274,52 +254,6 @@ function buildNotificationMessage(req) {
         }
     };
     return message;
-}
-
-/**
- * @swagger
- * components:
- *  schemas:
- *      successfull:
- *          type: object
- *          properties:
- *              message:
- *                  type: string
- *                  description: Mensaje de envio exitoso
- *              messageId:
- *                  type: string
- *                  description: Aplicación/Id del mensaje en firebase
- *          example:
- *              message: Successfully send message
- *              messageId: projects/corpo-8/messages/0:1695934698497806%73f1ea1973f1ea19
- *      failure:
- *          type: object
- *          properties:
- *              code:
- *                  type: string
- *                  description: tipo de error cometido
- *              message:
- *                  type: string
- *                  descripcion: descripción del error
- *          example:
- *              code: "app/invalid-credential"
- *              message: "Credential implementation provided to initializeApp() via the \"credential\" property failed to fetch a valid Google OAuth2 access token with the following error: \"Error fetching access token: Error while making request: getaddrinfo ENOTFOUND metadata.google.internal. Error code: ENOTFOUND\"."
- * 
- */
-function sendRequestToFCM(message, res) {
-    messaging.getMessaging().send(message)
-        .then((response) => {
-            res.status(200).json({
-                message: "Successfully send message",
-                messageId: response,
-            });
-            console.log("Successfully sent message: ", response);
-        })
-        .catch((error) => {
-            res.status(400);
-            res.send(error);
-            console.log("Error sending message", error);
-        });
 }
 
 module.exports = router;
